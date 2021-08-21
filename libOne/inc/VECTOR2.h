@@ -13,15 +13,14 @@ public:
     void operator-= ( const VECTOR2& v );
     void operator*= ( float f );
     void operator/= ( float f );
-    void set(float x, float y);
     float mag();
     float sqMag();
     VECTOR2 normalize();
     void setMag(float mag);
     void limmit(float limmit);
     float heading();
-    float dot(const VECTOR2& v) const;
-    float cross(const VECTOR2& v) const;
+    float dot(const VECTOR2& v)const;
+    float cross(const VECTOR2& v)const;
 };
 
 //VECTOR2ÇégópÇµÇΩàÍî ä÷êî

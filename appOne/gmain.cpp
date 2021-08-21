@@ -99,7 +99,7 @@ public:
 #include<vector>
 void gmain() {
     window(1920, 1080, full);
-    hideCursor();
+    //hideCursor();
 
     std::vector<CIRCLE> balls;
     COLOR color(0, 128, 255);
@@ -250,12 +250,10 @@ public:
         strokeWeight(5);
         stroke(0);
         mathLine(Sp.x, Sp.y, Ep.x, Ep.y);
-        //stroke(255, 0, 0);
-        //mathArrow(0, 0, N.x, N.y);
     }
-    const VECTOR2& n() { return N; }
-    const VECTOR2& sp() { return Sp; }
-    const VECTOR2& ep() { return Ep; }
+    const VECTOR2& n(){ return N; }
+    const VECTOR2& sp(){ return Sp; }
+    const VECTOR2& ep(){ return Ep; }
 };
 class BALL {
     VECTOR2 Pos, Vel;
@@ -269,7 +267,9 @@ public:
         Radius = r;
         Hue = hue;
     }
-    void setPos(const VECTOR2& pos) { Pos = pos; }
+    void setPos(const VECTOR2& pos) { 
+        Pos = pos; 
+    }
     void setVel(const VECTOR2& vel) {
         Vel = vel;
         Vel.setMag(Speed);
@@ -367,6 +367,107 @@ void gmain() {
         for (SEGMENT& segment : segments) {
             segment.draw();
         }
+    }
+}
+#endif
+
+#ifdef _VECTOR_COLLISION_1
+#include"libOne.h"
+class SEGMENT {
+    VECTOR2 Sp, Ep;
+    VECTOR2 N;//êÇíºÉxÉNÉgÉã
+public:
+    SEGMENT(float spx, float spy, float epx, float epy) {
+        Sp.x = spx; Sp.y = spy; Ep.x = epx; Ep.y = epy;
+        VECTOR2 v = Ep - Sp;
+        N.x = -v.y;
+        N.y = v.x;
+        N.normalize();
+    }
+    void draw() {
+        strokeWeight(5);
+        stroke(0);
+        mathLine(Sp.x, Sp.y, Ep.x, Ep.y);
+    }
+    const VECTOR2& n() { return N; }
+    const VECTOR2& sp() { return Sp; }
+    const VECTOR2& ep() { return Ep; }
+};
+class BALL {
+    VECTOR2 Pos, Vel;
+    float Speed = 0.02f;
+    float Radius = 0.1f;
+    float Hue = 0;
+public:
+    BALL(float px, float py, float vx, float vy, float sp, float r, float hue) {
+        Pos.x = px; Pos.y = py; Vel.x = vx; Vel.y = vy;
+        Speed = sp;
+        Radius = r;
+        Hue = hue;
+    }
+    void setPos(const VECTOR2& pos) { Pos = pos; }
+    void setVel(const VECTOR2& vel) {
+        Vel = vel;
+        Vel.setMag(Speed);
+    }
+    void manual() {
+        Vel.x = Vel.y = 0;
+        if (isPress(KEY_D))Vel.x = 1;
+        if (isPress(KEY_A))Vel.x = -1;
+        if (isPress(KEY_W))Vel.y = 1;
+        if (isPress(KEY_S))Vel.y = -1;
+        Vel.setMag(Speed);
+    }
+    void move() {
+        Pos += Vel;
+    }
+    void collision(SEGMENT& seg) {
+        const VECTOR2& n = seg.n();
+        VECTOR2 v1 = Pos - seg.sp();
+        float dist = n.dot(v1);
+        if (absolute(dist) < Radius) {
+            VECTOR2 v2 = Pos - seg.ep();
+            if (n.cross(v1) < 0 && n.cross(v2) > 0) {
+                float excess = Radius - absolute(dist);
+                if (dist > 0)
+                    Pos += n * excess;
+                else
+                    Pos += -n * excess;
+                calcReflectVel(n);
+            }
+            else if (v1.sqMag() < Radius * Radius) {
+                Pos = seg.sp() + v1.normalize() * Radius;
+                calcReflectVel(v1);
+            }
+            else if (v2.sqMag() < Radius * Radius) {
+                Pos = seg.ep() + v2.normalize() * Radius;
+                calcReflectVel(v2);
+            }
+        }
+    }
+    void calcReflectVel(const VECTOR2& n) {
+        Vel = n.dot(-Vel) * 2 * n + Vel;
+    }
+    void draw() {
+        noStroke();
+        colorMode(HSV);
+        fill(Hue, 128, 255, 220);
+        mathCircle(Pos.x, Pos.y, Radius * 2);
+    }
+};
+#include<vector>
+void gmain() {
+    window(1000, 1000);
+    BALL ball(0, 1, 0, 0, 0.02f, 0.3f, 0);
+    SEGMENT segment(-1, 0.5f, 1, -0.5f);
+    while (notQuit) {
+        clear(200);
+        mathAxis(3,128);
+        ball.manual();
+        ball.move();
+        ball.collision(segment);
+        ball.draw();
+        segment.draw();
     }
 }
 #endif
